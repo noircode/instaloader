@@ -246,37 +246,37 @@ class InstaloaderContext:
         login = session.post('https://www.instagram.com/accounts/login/ajax/',
                              data={'enc_password': enc_password, 'username': user}, allow_redirects=True)
         try:
-            resp_json = login.json()
+            self.resp_json = login.json()
         except json.decoder.JSONDecodeError as err:
             raise ConnectionException(
                 "Login error: JSON decode fail, {} - {}.".format(login.status_code, login.reason)
             ) from err
-        if resp_json.get('two_factor_required'):
+        if self.resp_json.get('two_factor_required'):
             two_factor_session = copy_session(session, self.request_timeout)
             two_factor_session.headers.update({'X-CSRFToken': csrf_token})
             two_factor_session.cookies.update({'csrftoken': csrf_token})
             self.two_factor_auth_pending = (two_factor_session,
                                             user,
-                                            resp_json['two_factor_info']['two_factor_identifier'])
+                                            self.resp_json['two_factor_info']['two_factor_identifier'])
             raise TwoFactorAuthRequiredException("Login error: two-factor authentication required.")
-        if resp_json.get('checkpoint_url'):
+        if self.resp_json.get('checkpoint_url'):
             raise ConnectionException("Login: Checkpoint required. Point your browser to "
                                       "https://www.instagram.com{} - "
-                                      "follow the instructions, then retry.".format(resp_json.get('checkpoint_url')))
-        if resp_json['status'] != 'ok':
-            if 'message' in resp_json:
-                raise ConnectionException("Login error: \"{}\" status, message \"{}\".".format(resp_json['status'],
-                                                                                               resp_json['message']))
+                                      "follow the instructions, then retry.".format(self.resp_json.get('checkpoint_url')))
+        if self.resp_json['status'] != 'ok':
+            if 'message' in self.resp_json:
+                raise ConnectionException("Login error: \"{}\" status, message \"{}\".".format(self.resp_json['status'],
+                                                                                               self.resp_json['message']))
             else:
-                raise ConnectionException("Login error: \"{}\" status.".format(resp_json['status']))
-        if 'authenticated' not in resp_json:
+                raise ConnectionException("Login error: \"{}\" status.".format(self.resp_json['status']))
+        if 'authenticated' not in self.resp_json:
             # Issue #472
-            if 'message' in resp_json:
-                raise ConnectionException("Login error: Unexpected response, \"{}\".".format(resp_json['message']))
+            if 'message' in self.resp_json:
+                raise ConnectionException("Login error: Unexpected response, \"{}\".".format(self.resp_json['message']))
             else:
                 raise ConnectionException("Login error: Unexpected response, this might indicate a blocked IP.")
-        if not resp_json['authenticated']:
-            if resp_json['user']:
+        if not self.resp_json['authenticated']:
+            if self.resp_json['user']:
                 # '{"authenticated": false, "user": true, "status": "ok"}'
                 raise BadCredentialsException('Login error: Wrong password.')
             else:
