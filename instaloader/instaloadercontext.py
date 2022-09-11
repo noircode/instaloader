@@ -23,7 +23,10 @@ from .exceptions import *
 def copy_session(session: requests.Session, request_timeout: Optional[float] = None) -> requests.Session:
     """Duplicates a requests.Session."""
     new = requests.Session()
-    new.verify = False
+    try:
+        new.verify = certifi.where()
+    except:
+        new.verify = False
     new.cookies = requests.utils.cookiejar_from_dict(requests.utils.dict_from_cookiejar(session.cookies))
     new.headers = session.headers.copy()
     new.proxies = session.proxies
@@ -163,7 +166,10 @@ class InstaloaderContext:
     def get_anonymous_session(self) -> requests.Session:
         """Returns our default anonymous requests.Session object."""
         session = requests.Session()
-        session.verify = False
+        try:
+            session.verify = certifi.where()
+        except:
+            session.verify = False
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
@@ -182,7 +188,10 @@ class InstaloaderContext:
     def load_session_from_file(self, username, sessionfile):
         """Not meant to be used directly, use :meth:`Instaloader.load_session_from_file`."""
         session = requests.Session()
-        session.verify = False
+        try:
+            session.verify = certifi.where()
+        except:
+            session.verify = False
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies = requests.utils.cookiejar_from_dict(pickle.load(sessionfile))
@@ -212,7 +221,10 @@ class InstaloaderContext:
         # pylint:disable=protected-access
         http.client._MAXHEADERS = 200
         session = requests.Session()
-        session.verify = False
+        try:
+            session.verify = certifi.where()
+        except:
+            session.verify = False
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
