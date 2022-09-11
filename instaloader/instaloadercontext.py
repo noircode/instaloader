@@ -290,7 +290,7 @@ class InstaloaderContext:
         self._session = session
         self.username = user
 
-    def two_factor_login(self, two_factor_code, proxies):
+    def two_factor_login(self, two_factor_code):
         """Second step of login if 2FA is enabled.
         Not meant to be used directly, use :meth:`Instaloader.two_factor_login`.
 
