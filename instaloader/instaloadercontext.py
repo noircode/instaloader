@@ -25,9 +25,9 @@ def copy_session(session: requests.Session, request_timeout: Optional[float] = N
     """Duplicates a requests.Session."""
     new = requests.Session()
     try:
-        new.verify = certifi.where()
+        new.cert = certifi.where()
     except:
-        new.verify = False
+        new.cert = None
     new.cookies = requests.utils.cookiejar_from_dict(requests.utils.dict_from_cookiejar(session.cookies))
     new.headers = session.headers.copy()
     new.proxies = session.proxies
@@ -168,9 +168,9 @@ class InstaloaderContext:
         """Returns our default anonymous requests.Session object."""
         session = requests.Session()
         try:
-            session.verify = certifi.where()
+            session.cert = certifi.where()
         except:
-            session.verify = False
+            session.cert = None
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
@@ -190,9 +190,9 @@ class InstaloaderContext:
         """Not meant to be used directly, use :meth:`Instaloader.load_session_from_file`."""
         session = requests.Session()
         try:
-            session.verify = certifi.where()
+            session.cert = certifi.where()
         except:
-            session.verify = False
+            session.cert = None
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies = requests.utils.cookiejar_from_dict(pickle.load(sessionfile))
@@ -223,9 +223,9 @@ class InstaloaderContext:
         http.client._MAXHEADERS = 200
         session = requests.Session()
         try:
-            session.verify = certifi.where()
+            session.cert = certifi.where()
         except:
-            session.verify = False
+            session.cert = None
         if self.proxies is not None:
             session.proxies = self.proxies
         session.cookies.update({'sessionid': '', 'mid': '', 'ig_pr': '1',
