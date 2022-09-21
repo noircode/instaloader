@@ -78,7 +78,7 @@ class InstaloaderContext:
         # error log, filled with error() and printed at the end of Instaloader.main()
         self.error_log = []                      # type: List[str]
 
-        self._rate_controller = rate_controller(self) if rate_controller is not None else RateController(self)
+        self._rate_controller = rate_controller(self) if rate_controller is not None else RateController(self, sleep)
 
         # Can be set to True for testing, disables supression of InstaloaderContext._error_catcher
         self.raise_all_errors = False
@@ -603,7 +603,8 @@ class RateController:
        L = instaloader.Instaloader(rate_controller=lambda ctx: MyRateController(ctx))
     """
 
-    def __init__(self, context: InstaloaderContext):
+    def __init__(self, context: InstaloaderContext, sleep: bool):
+        self._is_sleep = sleep
         self._context = context
         self._query_timestamps = dict()  # type: Dict[str, List[float]]
         self._earliest_next_request_time = 0.0
@@ -614,7 +615,8 @@ class RateController:
         # Not static, to allow for the behavior of this method to depend on context-inherent properties, such as
         # whether we are logged in.
         # pylint:disable=no-self-use
-        time.sleep(secs)
+        if self.sleep:
+            time.sleep(secs)
 
     def _dump_query_timestamps(self, current_time: float, failed_query_type: str):
         windows = [10, 11, 20, 22, 30, 60]
@@ -725,23 +727,4 @@ class RateController:
             self._query_timestamps[query_type].append(time.monotonic())
 
     def handle_429(self, query_type: str) -> None:
-        """This method is called to handle a 429 Too Many Requests response.
-
-        It calls :meth:`RateController.query_waittime` to determine the time needed to wait and then calls
-        :meth:`RateController.sleep` to wait until we can repeat the same request."""
-        current_time = time.monotonic()
-        waittime = self.query_waittime(query_type, current_time, True)
-        assert waittime >= 0
-        self._dump_query_timestamps(current_time, query_type)
-        text_for_429 = ("Instagram responded with HTTP error \"429 - Too Many Requests\". Please do not run multiple "
-                        "instances of Instaloader in parallel or within short sequence. Also, do not use any Instagram "
-                        "App while Instaloader is running.")
-        self._context.error(textwrap.fill(text_for_429), repeat_at_end=False)
-        if waittime > 1.5:
-            formatted_waittime = ("{} seconds".format(round(waittime)) if waittime <= 666 else
-                                  "{} minutes".format(round(waittime / 60)))
-            self._context.error("The request will be retried in {}, at {:%H:%M}."
-                                .format(formatted_waittime, datetime.now() + timedelta(seconds=waittime)),
-                                repeat_at_end=False)
-        if waittime > 0:
-            self.sleep(waittime)
+        pass
